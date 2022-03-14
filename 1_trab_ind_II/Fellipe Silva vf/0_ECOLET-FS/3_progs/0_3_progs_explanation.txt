@@ -1,0 +1,7 @@
+ECOLET_18_01854_replication -> do-file original
+
+ECOLET_18_01854_replication_v1 -> do-file com a parte que funciona (reprodução das figuras 1 e 2 do artigo)
+
+ECOLET_18_01854_replication_v2 -> do-file com alteração no código problemático ("rdbwselect_2014" para "rdbwselect"), que não funciona
+
+ECOLET_18_01854_replication_vdta -> do-file que salva o dataset modificado

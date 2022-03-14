@@ -1,0 +1,95 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\up202000782\Downloads\ECOLET_18_01854_replication\ECOLET_18_01854_v4.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 3 Dec 2020, 10:59:06
+{txt}
+{com}. 
+. 
+. /// Load data ///
+> 
+. use ECOLET_18_01854, clear //  n=2929 cities (cities with a lame-duck mayor in 2004-08 term were dropped) 
+{txt}
+{com}. 
+. 
+. /// Create key variables ///
+> 
+. *distance to population cutoffs
+. g dist=. 
+{txt}(2,929 missing values generated)
+
+{com}. replace dist=population-70  if state!=35  // all states except Sao Paulo
+{txt}(2,592 real changes made)
+
+{com}. replace dist=population-100 if state==35  // Sao Paulo State
+{txt}(337 real changes made)
+
+{com}. lab var dist "distance to population cutoffs (in 000s residents)"
+{txt}
+{com}. 
+. *Farmacia Popular eligibility dummy
+. g fpeligible=0      
+{txt}
+{com}. replace fpeligible=1 if population>=100 &  state==35 & population!=.
+{txt}(38 real changes made)
+
+{com}. replace fpeligible=1 if population>=70  &  state!=35 & population!=.
+{txt}(156 real changes made)
+
+{com}. lab var fpeligible "eligible for Farmacia Popular"
+{txt}
+{com}. 
+. *generate spline polinomial  
+. g dist_fpeligible=dist*fpeligible       
+{txt}
+{com}.  
+.  
+.  
+. /// Replication of Table 1 /// 
+> 
+. **Replication of columns 1-4**   
+. 
+. foreach bwmethod in CV IK  {c -(}
+{txt}  2{com}. preserve 
+{txt}  3{com}. rdbwselect votes_share_08 dist, c(0) p(1) kernel(tri) bwselect("`bwmethod'") 
+{txt}  4{com}. loc bw=round(e(h_`bwmethod'))
+{txt}  5{com}. drop if dist>`bw'
+{txt}  6{com}. drop if dist<-`bw'
+{txt}  7{com}. 
+. *Panel A. OLS estimates
+. reg votes_share_04 fpcomplier dist dist_fpeligible, r cluster(state)
+{txt}  8{com}. outreg2 fpcomplier using "Table1_PanelA_`bwmethod'.xls", replace  se slow(1000) nocons lab dec(5) 
+{txt}  9{com}. 
+. reg votes_share_08 fpcomplier dist dist_fpeligible, r cluster(state)
+{txt} 10{com}. outreg2 fpcomplier using "Table1_PanelA_`bwmethod'.xls", append  se slow(1000) nocons lab dec(5) 
+{txt} 11{com}. 
+. 
+. *Panel B. Reduced-form estimates (sharp regression discontinuity design)
+. reg votes_share_04 fpeligible dist dist_fpeligible, r cluster(state)
+{txt} 12{com}. outreg2 fpeligible using "Table1_PanelB_`bwmethod'.xls", replace  se slow(1000) nocons lab dec(5) 
+{txt} 13{com}. 
+. reg votes_share_08 fpeligible dist dist_fpeligible, r cluster(state)
+{txt} 14{com}. outreg2 fpeligible using "Table1_PanelB_`bwmethod'.xls", append  se slow(1000) nocons lab dec(5) 
+{txt} 15{com}. 
+. 
+. *Panel C. 2SLS estimates (fuzzy regression discontinuity design) 
+. ivreg2 votes_share_04 (fpcomplier=fpeligible) dist dist_fpeligible, r cluster(state)
+{txt} 16{com}. outreg2 fpcomplier using "Table1_PanelC_2SLS_`bwmethod'.xls", replace  se slow(1000) nocons lab dec(5) 
+{txt} 17{com}. 
+. ivreg2 votes_share_08 (fpcomplier=fpeligible) dist dist_fpeligible, r cluster(state)
+{txt} 18{com}. outreg2 fpcomplier using "Table1_PanelC_2SLS_`bwmethod'.xls", append  se slow(1000) nocons lab dec(5) 
+{txt} 19{com}. 
+. reg fpcomplier fpeligible dist dist_fpeligible, r cluster(state) 
+{txt} 20{com}. outreg2 fpeligible using "Table1_PanelC_firststage_`bwmethod'.xls", replace  se slow(1000) nocons lab dec(5) 
+{txt} 21{com}. 
+. restore
+{txt} 22{com}. {c )-}
+{err}{err}{cmd:bwselect()} options IK, CCT and CV have been depricated. Please see help for new options
+{txt}{search r(7), local:r(7);}
+
+end of do-file
+
+{search r(7), local:r(7);}
+
+{com}. exit, clear

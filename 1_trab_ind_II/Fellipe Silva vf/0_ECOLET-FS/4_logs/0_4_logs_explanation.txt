@@ -1,0 +1,13 @@
+ECOLET_18_01854 -> log da primeira tentativa de reproduzir o artigo, com as modificações necessárias (selecionando o "path" onde se encontravam os arquivos para reprodução, e com instalação prévia do pacote RDROBUST)
+
+ECOLET_18_01854_v0 -> mesmo do acima
+
+ECOLET_18_01854_v1 -> tentativa de reproduzir as colunas 5 e 6 da tabela de regressão, sem sucesso por conta do comando outreg2 não ser reconhecido
+
+ECOLET_18_01854_v2 -> tentativa de reproduzir as figuras 1 e 2 do artigo, que falhou por conta da falta do pacote CMOGRAM
+
+ECOLET_18_01854_v3 -> após instalação do CMOGRAM, reprodução das figuras dá certo
+
+ECOLET_18_01854_v4 -> tentativa de reproduzir tabelas de regressão modificando o comando "rdbwselect_2014", que não dá certo
+
+ECOLET_18_01854_vdta -> processo de salvar o dataset alterado para realizar as regressões

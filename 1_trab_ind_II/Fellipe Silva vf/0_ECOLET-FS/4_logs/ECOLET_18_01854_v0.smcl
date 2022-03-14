@@ -1,0 +1,127 @@
+{smcl}
+{txt}{sf}{ul off}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\up202000782\Downloads\ECOLET_18_01854_replication\ECOLET_18_01854_v0.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 3 Dec 2020, 10:29:42
+{txt}
+{com}. 
+. 
+. /// Load data ///
+> 
+. use ECOLET_18_01854, clear //  n=2929 cities (cities with a lame-duck mayor in 2004-08 term were dropped) 
+{txt}
+{com}. 
+. 
+. /// Create key variables ///
+> 
+. *distance to population cutoffs
+. g dist=. 
+{txt}(2,929 missing values generated)
+
+{com}. replace dist=population-70  if state!=35  // all states except Sao Paulo
+{txt}(2,592 real changes made)
+
+{com}. replace dist=population-100 if state==35  // Sao Paulo State
+{txt}(337 real changes made)
+
+{com}. lab var dist "distance to population cutoffs (in 000s residents)"
+{txt}
+{com}. 
+. *Farmacia Popular eligibility dummy
+. g fpeligible=0      
+{txt}
+{com}. replace fpeligible=1 if population>=100 &  state==35 & population!=.
+{txt}(38 real changes made)
+
+{com}. replace fpeligible=1 if population>=70  &  state!=35 & population!=.
+{txt}(156 real changes made)
+
+{com}. lab var fpeligible "eligible for Farmacia Popular"
+{txt}
+{com}. 
+. *generate spline polinomial  
+. g dist_fpeligible=dist*fpeligible       
+{txt}
+{com}.  
+.  
+.  
+. /// Replication of Table 1 /// 
+> 
+. **Replication of columns 1-4**   
+. 
+. foreach bwmethod in CV IK  {c -(}
+{txt}  2{com}. preserve 
+{txt}  3{com}. rdbwselect_2014 votes_share_08 dist, c(0) p(1) kernel(tri) bwselect("`bwmethod'") 
+{txt}  4{com}. loc bw=round(e(h_`bwmethod'))
+{txt}  5{com}. drop if dist>`bw'
+{txt}  6{com}. drop if dist<-`bw'
+{txt}  7{com}. 
+. *Panel A. OLS estimates
+. reg votes_share_04 fpcomplier dist dist_fpeligible, r cluster(state)
+{txt}  8{com}. outreg2 fpcomplier using "Table1_PanelA_`bwmethod'.xls", replace  se slow(1000) nocons lab dec(5) 
+{txt}  9{com}. 
+. reg votes_share_08 fpcomplier dist dist_fpeligible, r cluster(state)
+{txt} 10{com}. outreg2 fpcomplier using "Table1_PanelA_`bwmethod'.xls", append  se slow(1000) nocons lab dec(5) 
+{txt} 11{com}. 
+. 
+. *Panel B. Reduced-form estimates (sharp regression discontinuity design)
+. reg votes_share_04 fpeligible dist dist_fpeligible, r cluster(state)
+{txt} 12{com}. outreg2 fpeligible using "Table1_PanelB_`bwmethod'.xls", replace  se slow(1000) nocons lab dec(5) 
+{txt} 13{com}. 
+. reg votes_share_08 fpeligible dist dist_fpeligible, r cluster(state)
+{txt} 14{com}. outreg2 fpeligible using "Table1_PanelB_`bwmethod'.xls", append  se slow(1000) nocons lab dec(5) 
+{txt} 15{com}. 
+. 
+. *Panel C. 2SLS estimates (fuzzy regression discontinuity design) 
+. ivreg2 votes_share_04 (fpcomplier=fpeligible) dist dist_fpeligible, r cluster(state)
+{txt} 16{com}. outreg2 fpcomplier using "Table1_PanelC_2SLS_`bwmethod'.xls", replace  se slow(1000) nocons lab dec(5) 
+{txt} 17{com}. 
+. ivreg2 votes_share_08 (fpcomplier=fpeligible) dist dist_fpeligible, r cluster(state)
+{txt} 18{com}. outreg2 fpcomplier using "Table1_PanelC_2SLS_`bwmethod'.xls", append  se slow(1000) nocons lab dec(5) 
+{txt} 19{com}. 
+. reg fpcomplier fpeligible dist dist_fpeligible, r cluster(state) 
+{txt} 20{com}. outreg2 fpeligible using "Table1_PanelC_firststage_`bwmethod'.xls", replace  se slow(1000) nocons lab dec(5) 
+{txt} 21{com}. 
+. restore
+{txt} 22{com}. {c )-}
+{res}{err}                 <istmt>:  3499  rdbwselect_2014_kweight() not found
+{txt}{search r(3499), local:r(3499);}
+
+end of do-file
+
+{search r(3499), local:r(3499);}
+
+{com}. do "C:\Users\UPE743~1\AppData\Local\Temp\STD1744_000000.tmp"
+{txt}
+{com}. *Replication of MS18_01854 (Economics Letters)
+. *Authors: Christian Lehmann (corresponding author) and Hellen Matarazzo
+. 
+. /* Required STATA packages: 
+> - "rdbwselect_2014" and "rdbwselect" must be installed to run this do-file. 
+> - They can be downloaded at https://sites.google.com/site/rdpackages/rdrobust/stata (last accessed 17 Jan 2019) 
+> - References: Calonico, S., Cattaneo, M. D., and R. Titiunik. 2014. Robust Data-Driven Inference in the Regression-DiscontinuityDesign. Stata Journal 14(4): 909-946, 4th Quarter 2014; Calonico, S., M. D. Cattaneo, M. H. Farrell, and R. Titiunik. 2016b. rdrobust: Software for Regression DiscontinuityDesigns.  Working Paper.  
+> */
+. 
+. 
+. /// preambule ///
+> clear all
+{res}{txt}
+{com}. version 13.1
+{txt}
+{com}. set more off
+{txt}
+{com}. 
+. 
+. /// set directory ///
+> 
+. cd "C:\Users\up202000782\Downloads\ECOLET_18_01854_replication" // enter the directory where you put the (unzipped) replication folder "ECOLET_18_01854_replication"   
+{res}C:\Users\up202000782\Downloads\ECOLET_18_01854_replication
+{txt}
+{com}. 
+. 
+. /// log file ///
+> 
+. capture log close
+{smcl}
+{com}{sf}{ul off}
